@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cool Website</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+        .container {
+            text-align: center;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .discord-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .discord {
+            margin: 0 10px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        iframe {
+            border: none;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .join-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 25px;
+            font-size: 20px;
+            color: white;
+            background-color: #7289da;
+            border: none;
+            border-radius: 5px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .join-button:hover {
+            background-color: #5b6eae;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Join our Discord Communities</h1>
+        <div class="discord-wrapper">
+            <div class="discord">
+                <h2>Coding Community</h2>
+                <iframe src="https://discord.com/widget?id=1120777700391538788&theme=dark" width="350" height="500" allowtransparency="true"></iframe>
+                <br>
+                <a href="https://discord.com/invite/eDsXcAYvJB" class="join-button">Join!</a>
+            </div>
+            <div class="discord">
+                <h2>Game Community</h2>
+                <iframe src="https://discord.com/widget?id=1216791471081128017&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+                <br>
+                <a href="https://discord.com/invite/3DUKmZr3mm" class="join-button">Join!</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
