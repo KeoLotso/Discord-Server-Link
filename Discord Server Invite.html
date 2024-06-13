@@ -12,7 +12,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;
         }
@@ -22,18 +22,16 @@
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            width: 90%; /* Adjusted width for better mobile layout */
+            max-width: 800px; /* Limit maximum width for larger screens */
         }
         .discord-wrapper {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column; /* Stack widgets vertically on small screens */
+            gap: 20px; /* Space between the two widgets */
         }
         .discord {
-            margin: 0 10px;
+            width: 100%; /* Full width for each widget on mobile */
         }
         h1 {
             margin-bottom: 20px;
@@ -42,6 +40,8 @@
             border: none;
             border-radius: 10px;
             margin-bottom: 10px;
+            width: 100%; /* Make the iframe width 100% */
+            height: 500px; /* Set a fixed height for better visibility */
         }
         .join-button {
             display: inline-block;
@@ -66,13 +66,13 @@
         <div class="discord-wrapper">
             <div class="discord">
                 <h2>Coding Community</h2>
-                <iframe src="https://discord.com/widget?id=1120777700391538788&theme=dark" width="350" height="500" allowtransparency="true"></iframe>
+                <iframe src="https://discord.com/widget?id=1120777700391538788&theme=dark" allowtransparency="true"></iframe>
                 <br>
                 <a href="https://discord.com/invite/eDsXcAYvJB" class="join-button">Join!</a>
             </div>
             <div class="discord">
                 <h2>Game Community</h2>
-                <iframe src="https://discord.com/widget?id=1216791471081128017&theme=dark" width="350" height="500" allowtransparency="true" frameborder="0" sandbox="allow-popups allow-popups-to-escape-sandbox allow-same-origin allow-scripts"></iframe>
+                <iframe src="https://discord.com/widget?id=1216791471081128017&theme=dark" allowtransparency="true"></iframe>
                 <br>
                 <a href="https://discord.com/invite/3DUKmZr3mm" class="join-button">Join!</a>
             </div>
