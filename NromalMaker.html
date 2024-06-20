@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Normal Map Generator</title>
+</head>
+<body>
+    <h1>Normal Map Generator</h1>
+    <input type="file" id="imageInput" accept="image/*">
+    <br><br>
+    <label for="strengthInput">Strength: </label>
+    <input type="range" id="strengthInput" min="1" max="10" value="5">
+    <br><br>
+    <button onclick="generateNormalMap()">Generate Normal Map</button>
+    <br><br>
+    <canvas id="canvas" style="display: none;"></canvas>
+    <img id="outputImage" style="display: none;">
+    
+    <script>
+        function generateNormalMap() {
+            const fileInput = document.getElementById('imageInput');
+            const strength = document.getElementById('strengthInput').value;
+            if (!fileInput.files[0]) {
+                alert('Please upload an image.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const normalMapData = createNormalMap(imageData, strength);
+                    ctx.putImageData(normalMapData, 0, 0);
+                    
+                    const outputImage = document.getElementById('outputImage');
+                    outputImage.src = canvas.toDataURL();
+                    outputImage.style.display = 'block';
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(fileInput.files[0]);
+        }
+
+        function createNormalMap(imageData, strength) {
+            const width = imageData.width;
+            const height = imageData.height;
+            const data = imageData.data;
+            const normalData = new Uint8ClampedArray(data.length);
+            const factor = strength / 10;
+
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const idx = (y * width + x) * 4;
+                    const gray = data[idx] * 0.3 + data[idx + 1] * 0.59 + data[idx + 2] * 0.11;
+                    
+                    const dx = ((data[idx + 4] || gray) - (data[idx - 4] || gray)) * factor;
+                    const dy = ((data[idx + width * 4] || gray) - (data[idx - width * 4] || gray)) * factor;
+                    const dz = 255 / factor;
+
+                    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                    normalData[idx] = 128 + dx / length * 128;
+                    normalData[idx + 1] = 128 + dy / length * 128;
+                    normalData[idx + 2] = 128 + dz / length * 128;
+                    normalData[idx + 3] = 255;
+                }
+            }
+
+            return new ImageData(normalData, width, height);
+        }
+    </script>
+</body>
+</html>
