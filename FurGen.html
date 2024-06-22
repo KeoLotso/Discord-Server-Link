@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fur Gen</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #333;
+            color: white;
+        }
+        canvas {
+            border: 1px solid white;
+        }
+        #generateButton, #pixelSizeInput {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas" width="400" height="400"></canvas>
+    <input type="number" id="pixelSizeInput" value="10" min="1" max="100">
+    <button id="generateButton">Generate</button>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const generateButton = document.getElementById('generateButton');
+        const pixelSizeInput = document.getElementById('pixelSizeInput');
+
+        function generateFurPattern() {
+            const pixelSize = parseInt(pixelSizeInput.value);
+            const cols = Math.floor(canvas.width / pixelSize);
+            const rows = Math.floor(canvas.height / pixelSize);
+            const pixels = [];
+
+            for (let y = 0; y < rows; y++) {
+                pixels[y] = [];
+                for (let x = 0; x < cols; x++) {
+                    const color = Math.random() * 255;
+                    pixels[y][x] = color;
+                }
+            }
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    const neighbors = getNeighbors(pixels, x, y);
+                    const averageColor = neighbors.reduce((sum, color) => sum + color, 0) / neighbors.length;
+                    ctx.fillStyle = `rgb(${averageColor}, ${averageColor}, ${averageColor})`;
+                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            }
+        }
+
+        function getNeighbors(pixels, x, y) {
+            const neighbors = [];
+            const offsets = [-1, 0, 1];
+            offsets.forEach(dx => {
+                offsets.forEach(dy => {
+                    if (dx === 0 && dy === 0) return;
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    if (nx >= 0 && nx < pixels[0].length && ny >= 0 && ny < pixels.length) {
+                        neighbors.push(pixels[ny][nx]);
+                    }
+                });
+            });
+            return neighbors;
+        }
+
+        generateButton.addEventListener('click', generateFurPattern);
+    </script>
+</body>
+</html>
