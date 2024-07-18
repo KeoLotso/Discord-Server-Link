@@ -52,6 +52,20 @@
             background-color: red;
             color: white;
         }
+        #progressBar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            margin-top: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #progressBar div {
+            height: 100%;
+            background-color: green;
+            width: 0;
+            transition: width 0.3s ease;
+        }
     </style>
 </head>
 <body>
@@ -60,7 +74,7 @@
         <input type="file" id="fileInput" multiple accept="image/*,video/*">
         <button id="sendButton" class="afk">AFK</button>
         <p id="statusMessage"></p>
-        <p id="progress"></p>
+        <div id="progressBar"><div></div></div>
     </div>
 
     <script>
@@ -79,64 +93,40 @@
         document.getElementById('sendButton').addEventListener('click', async function() {
             const link = document.getElementById('linkInput').value;
             const files = document.getElementById('fileInput').files;
-            if (link.trim() === "" && files.length === 0) {
-                alert("Please enter a link or select files.");
+            if (files.length === 0) {
+                alert("Please select at least one file.");
                 return;
             }
 
             this.className = 'sending';
             this.innerText = 'Sending';
             document.getElementById('statusMessage').innerText = '';
-            document.getElementById('progress').innerText = '0%';
+            const progressBar = document.querySelector('#progressBar div');
+            progressBar.style.width = '0%';
 
-            let totalItems = files.length + (link.trim() ? 1 : 0);
+            let totalItems = files.length;
             let sentItems = 0;
-
-            if (link.trim()) {
-                // Send file from URL
-                try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ content: link })
-                    });
-
-                    if (response.ok) {
-                        document.getElementById('statusMessage').innerText += `Sent file from URL\n`;
-                        sentItems++;
-                    } else {
-                        document.getElementById('statusMessage').innerText += `Failed to send file from URL: ${response.status}\n`;
-                    }
-                } catch (error) {
-                    document.getElementById('statusMessage').innerText += `Error sending file from URL: ${error}\n`;
-                }
-                document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
-            }
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                const formData = new FormData();
-                formData.append('file', file);
 
                 try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
+                    const formData = new FormData();
+                    formData.append('file', file);
+
+                    const response = await uploadFile(formData, file);
 
                     if (response.ok) {
-                        document.getElementById('statusMessage').innerText += `Sent file ${i + 1}\n`;
+                        document.getElementById('statusMessage').innerText += `Sent file ${file.name}\n`;
                         sentItems++;
                     } else {
-                        document.getElementById('statusMessage').innerText += `Failed to send file ${i + 1}: ${response.status}\n`;
+                        document.getElementById('statusMessage').innerText += `Failed to send file ${file.name}: ${response.status}\n`;
                     }
                 } catch (error) {
-                    document.getElementById('statusMessage').innerText += `Error sending file ${i + 1}: ${error}\n`;
+                    document.getElementById('statusMessage').innerText += `Error sending file ${file.name}: ${error}\n`;
                 }
 
-                document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
+                progressBar.style.width = `${Math.round((sentItems / totalItems) * 100)}%`;
             }
 
             if (sentItems === totalItems) {
@@ -150,6 +140,45 @@
             document.getElementById('linkInput').value = '';
             document.getElementById('fileInput').value = '';
         });
+
+        async function uploadFile(formData, file) {
+            const chunkSize = 1024 * 1024; // 1MB chunks
+            const chunks = Math.ceil(file.size / chunkSize);
+            let start = 0;
+            let end = Math.min(chunkSize, file.size);
+            let chunkIndex = 0;
+
+            try {
+                while (start < file.size) {
+                    const chunk = file.slice(start, end);
+                    formData.set('file', chunk, file.name);
+
+                    const headers = {
+                        'Content-Range': `bytes ${start}-${end - 1}/${file.size}`,
+                    };
+
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        body: formData,
+                        headers: headers,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to upload chunk ${chunkIndex + 1}: ${response.status}`);
+                    }
+
+                    chunkIndex++;
+                    start = end;
+                    end = Math.min(start + chunkSize, file.size);
+                    const progressBar = document.querySelector('#progressBar div');
+                    progressBar.style.width = `${Math.round((chunkIndex / chunks) * 100)}%`;
+                }
+
+                return { ok: true };
+            } catch (error) {
+                return { ok: false, error: error.message };
+            }
+        }
     </script>
 </body>
 </html>
