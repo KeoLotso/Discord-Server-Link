@@ -93,6 +93,7 @@
             let sentItems = 0;
 
             if (link.trim()) {
+                // Send file from URL
                 try {
                     const response = await fetch(webhookUrl, {
                         method: 'POST',
@@ -102,20 +103,14 @@
                         body: JSON.stringify({ content: link })
                     });
 
-                    if (response.status === 204) {
-                        document.getElementById('statusMessage').innerText += `Sent link\n`;
+                    if (response.ok) {
+                        document.getElementById('statusMessage').innerText += `Sent file from URL\n`;
                         sentItems++;
                     } else {
-                        document.getElementById('statusMessage').innerText += `Failed to send link: ${response.status}\n`;
-                        this.className = 'failed';
-                        this.innerText = 'Failed';
-                        return;
+                        document.getElementById('statusMessage').innerText += `Failed to send file from URL: ${response.status}\n`;
                     }
                 } catch (error) {
-                    document.getElementById('statusMessage').innerText += `Error sending link: ${error}\n`;
-                    this.className = 'failed';
-                    this.innerText = 'Failed';
-                    return;
+                    document.getElementById('statusMessage').innerText += `Error sending file from URL: ${error}\n`;
                 }
                 document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
             }
@@ -131,7 +126,7 @@
                         body: formData
                     });
 
-                    if (response.status === 204) {
+                    if (response.ok) {
                         document.getElementById('statusMessage').innerText += `Sent file ${i + 1}\n`;
                         sentItems++;
                     } else {
