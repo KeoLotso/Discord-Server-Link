@@ -136,21 +136,22 @@
                         sentItems++;
                     } else {
                         document.getElementById('statusMessage').innerText += `Failed to send file ${i + 1}: ${response.status}\n`;
-                        this.className = 'failed';
-                        this.innerText = 'Failed';
-                        return;
                     }
                 } catch (error) {
                     document.getElementById('statusMessage').innerText += `Error sending file ${i + 1}: ${error}\n`;
-                    this.className = 'failed';
-                    this.innerText = 'Failed';
-                    return;
                 }
+
                 document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
             }
 
-            this.className = 'sent';
-            this.innerText = 'Sent';
+            if (sentItems === totalItems) {
+                this.className = 'sent';
+                this.innerText = 'Sent';
+            } else {
+                this.className = 'failed';
+                this.innerText = 'Failed';
+            }
+
             document.getElementById('linkInput').value = '';
             document.getElementById('fileInput').value = '';
         });
