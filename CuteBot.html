@@ -71,7 +71,7 @@
 <body>
     <div class="container">
         <input type="text" id="linkInput" placeholder="Enter the image or video link">
-        <input type="file" id="fileInput" multiple accept="image/*,video/*">
+        <input type="file" id="fileInput" multiple accept="video/*">
         <button id="sendButton" class="afk">AFK</button>
         <p id="statusMessage"></p>
         <div id="progressBar"><div></div></div>
@@ -111,11 +111,7 @@
                 const file = files[i];
 
                 try {
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    const response = await uploadFile(formData, file);
-
+                    const response = await sendFile(file);
                     if (response.ok) {
                         document.getElementById('statusMessage').innerText += `Sent file ${file.name}\n`;
                         sentItems++;
@@ -141,7 +137,7 @@
             document.getElementById('fileInput').value = '';
         });
 
-        async function uploadFile(formData, file) {
+        async function sendFile(file) {
             const chunkSize = 1024 * 1024; // 1MB chunks
             const chunks = Math.ceil(file.size / chunkSize);
             let start = 0;
@@ -151,7 +147,8 @@
             try {
                 while (start < file.size) {
                     const chunk = file.slice(start, end);
-                    formData.set('file', chunk, file.name);
+                    const formData = new FormData();
+                    formData.append('file', chunk, file.name);
 
                     const headers = {
                         'Content-Range': `bytes ${start}-${end - 1}/${file.size}`,
@@ -170,8 +167,6 @@
                     chunkIndex++;
                     start = end;
                     end = Math.min(start + chunkSize, file.size);
-                    const progressBar = document.querySelector('#progressBar div');
-                    progressBar.style.width = `${Math.round((chunkIndex / chunks) * 100)}%`;
                 }
 
                 return { ok: true };
