@@ -19,6 +19,7 @@
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 400px;
         }
         input[type="text"],
         input[type="file"] {
@@ -52,96 +53,138 @@
             background-color: red;
             color: white;
         }
+        #statusMessage {
+            margin-top: 10px;
+            white-space: pre-wrap;
+        }
+        #progressBar {
+            width: 100%;
+            height: 20px;
+            background-color: #ddd;
+            margin-top: 10px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        #progressBar div {
+            height: 100%;
+            background-color: green;
+            width: 0;
+            transition: width 0.3s ease;
+        }
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
+        <select id="serverSelect">
+            <option value="server1">Server 1</option>
+            <option value="server2">Server 2</option>
+            <option value="server3">Server 3</option>
+            <option value="server4">Server 4</option>
+            <option value="server5">Server 5</option>
+        </select>
         <input type="text" id="linkInput" placeholder="Enter the image or video link">
         <input type="file" id="fileInput" multiple accept="image/*,video/*">
         <button id="sendButton" class="afk">AFK</button>
         <p id="statusMessage"></p>
-        <p id="progress"></p>
+        <div id="progressBar"><div></div></div>
     </div>
 
     <script>
-        const webhookUrl = "https://discord.com/api/webhooks/1263514135430303784/oB1qoCH_HyQsw-PDDBJv3qc7kN7Exwx3PXXWAIn2d4ttzfgIBXxkQrRhvWAO8gSKOmln";
+        const serverUrls = {
+            server1: "https://discord.com/api/webhooks/1263565968739663973/TROBGL29qnZ6P2hz3PMFUkNeP1ZtRhhuUo18CXN62MEiY2qC1BzM30wC4SFdg_Tq70d3",
+            server2: "https://discord.com/api/webhooks/1263566171677003926/lb2axOFICQscM-ib96L2rpMemJ-mlIDumcv-rYNRf8VgDozOBB_qd9DzbkRDbHj8yhYQ",
+            server3: "https://discord.com/api/webhooks/1263566306603434025/NzRqEyNnHa0sgBOrsRQHrQalKclxbJBu6fYRTWvhYWafJbmSzNJE2AJZ00WUf130Do0V",
+            server4: "https://discord.com/api/webhooks/1263566451957174394/Z7K8U8AC5OOJN1VSYcEP0MSAhvOPF9MMOwl-ncyeuFeUPOxQbj4cLiB0JWkZtyyx6diU",
+            server5: "https://discord.com/api/webhooks/1263566562506444850/trvnpE0m0T0N5skSJyWSSvCtmyS7EPSieggHZTHHF8oN30PAHWoxvs4_lOD9FiPgk9Fg"
+        };
 
-        document.getElementById('linkInput').addEventListener('input', function() {
-            document.getElementById('sendButton').className = 'afk';
-            document.getElementById('sendButton').innerText = 'AFK';
+        const serverSelect = document.getElementById('serverSelect');
+        const linkInput = document.getElementById('linkInput');
+        const fileInput = document.getElementById('fileInput');
+        const sendButton = document.getElementById('sendButton');
+        const statusMessage = document.getElementById('statusMessage');
+        const progressBar = document.querySelector('#progressBar div');
+
+        serverSelect.addEventListener('change', function() {
+            const selectedServer = this.value;
+            const webhookUrl = serverUrls[selectedServer];
+            if (webhookUrl) {
+                linkInput.value = '';
+                resetButton();
+                sendButton.setAttribute('data-webhook-url', webhookUrl);
+            }
         });
 
-        document.getElementById('fileInput').addEventListener('change', function() {
-            document.getElementById('sendButton').className = 'afk';
-            document.getElementById('sendButton').innerText = 'AFK';
+        linkInput.addEventListener('input', function() {
+            resetButton();
         });
 
-        document.getElementById('sendButton').addEventListener('click', async function() {
-            const link = document.getElementById('linkInput').value;
-            const files = document.getElementById('fileInput').files;
-            if (link.trim() === "" && files.length === 0) {
+        fileInput.addEventListener('change', function() {
+            resetButton();
+        });
+
+        sendButton.addEventListener('click', async function() {
+            const webhookUrl = sendButton.getAttribute('data-webhook-url');
+            if (!webhookUrl) {
+                alert("Please select a server first.");
+                return;
+            }
+
+            const link = linkInput.value.trim();
+            const files = fileInput.files;
+
+            if (link === '' && files.length === 0) {
                 alert("Please enter a link or select files.");
                 return;
             }
 
             this.className = 'sending';
             this.innerText = 'Sending';
-            document.getElementById('statusMessage').innerText = '';
-            document.getElementById('progress').innerText = '0%';
+            statusMessage.innerText = '';
+            progressBar.style.width = '0%';
 
-            let totalItems = files.length + (link.trim() ? 1 : 0);
+            let totalItems = files.length + (link !== '' ? 1 : 0);
             let sentItems = 0;
 
-            if (link.trim()) {
+            if (link !== '') {
                 try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({ content: link })
-                    });
-
-                    if (response.status === 204) {
-                        document.getElementById('statusMessage').innerText += `Sent link\n`;
+                    const response = await sendLink(webhookUrl, link);
+                    if (response.ok) {
+                        statusMessage.innerText += `Sent link\n`;
                         sentItems++;
                     } else {
-                        document.getElementById('statusMessage').innerText += `Failed to send link: ${response.status}\n`;
-                        this.className = 'failed';
-                        this.innerText = 'Failed';
-                        return;
+                        statusMessage.innerText += `Failed to send link: ${response.status}\n`;
                     }
                 } catch (error) {
-                    document.getElementById('statusMessage').innerText += `Error sending link: ${error}\n`;
-                    this.className = 'failed';
-                    this.innerText = 'Failed';
-                    return;
+                    statusMessage.innerText += `Error sending link: ${error}\n`;
                 }
-                document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
+
+                progressBar.style.width = `${Math.round((sentItems / totalItems) * 100)}%`;
             }
 
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
-                const formData = new FormData();
-                formData.append('file', file);
 
                 try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.status === 204) {
-                        document.getElementById('statusMessage').innerText += `Sent file ${i + 1}\n`;
+                    const response = await sendFile(webhookUrl, file);
+                    if (response.ok) {
+                        statusMessage.innerText += `Sent file ${file.name}\n`;
                         sentItems++;
                     } else {
-                        document.getElementById('statusMessage').innerText += `Failed to send file ${i + 1}: ${response.status}\n`;
+                        statusMessage.innerText += `Failed to send file ${file.name}: ${response.status}\n`;
                     }
                 } catch (error) {
-                    document.getElementById('statusMessage').innerText += `Error sending file ${i + 1}: ${error}\n`;
+                    statusMessage.innerText += `Error sending file ${file.name}: ${error}\n`;
                 }
 
-                document.getElementById('progress').innerText = `${Math.round((sentItems / totalItems) * 100)}%`;
+                progressBar.style.width = `${Math.round((sentItems / totalItems) * 100)}%`;
             }
 
             if (sentItems === totalItems) {
@@ -152,9 +195,63 @@
                 this.innerText = 'Failed';
             }
 
-            document.getElementById('linkInput').value = '';
-            document.getElementById('fileInput').value = '';
+            resetInputs();
         });
+
+        function resetButton() {
+            sendButton.className = 'afk';
+            sendButton.innerText = 'AFK';
+            sendButton.removeAttribute('data-webhook-url');
+        }
+
+        function resetInputs() {
+            linkInput.value = '';
+            fileInput.value = '';
+        }
+
+        async function sendLink(webhookUrl, link) {
+            const payload = {
+                content: link
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to send link: ${response.status}`);
+                }
+
+                return { ok: true };
+            } catch (error) {
+                return { ok: false, error: error.message };
+            }
+        }
+
+        async function sendFile(webhookUrl, file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to send file ${file.name}: ${response.status}`);
+                }
+
+                return { ok: true };
+            } catch (error) {
+                return { ok: false, error: error.message };
+            }
+        }
     </script>
 </body>
 </html>
