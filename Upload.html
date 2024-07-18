@@ -113,13 +113,7 @@
         const progressBar = document.querySelector('#progressBar div');
 
         serverSelect.addEventListener('change', function() {
-            const selectedServer = this.value;
-            const webhookUrl = serverUrls[selectedServer];
-            if (webhookUrl) {
-                linkInput.value = '';
-                resetButton();
-                sendButton.setAttribute('data-webhook-url', webhookUrl);
-            }
+            updateWebhookUrl();
         });
 
         linkInput.addEventListener('input', function() {
@@ -250,6 +244,16 @@
                 return { ok: true };
             } catch (error) {
                 return { ok: false, error: error.message };
+            }
+        }
+
+        function updateWebhookUrl() {
+            const selectedServer = serverSelect.value;
+            const webhookUrl = serverUrls[selectedServer];
+            if (webhookUrl) {
+                linkInput.value = '';
+                resetButton();
+                sendButton.setAttribute('data-webhook-url', webhookUrl);
             }
         }
     </script>
