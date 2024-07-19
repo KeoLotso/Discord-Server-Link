@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Page</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2c3e50;
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+        }
+        .container {
+            text-align: center;
+            max-width: 90%;
+            margin: auto;
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+            padding-top: 20px;
+            color: #ecf0f1;
+        }
+        h1 {
+            margin-bottom: 20px;
+            font-size: 2.5em;
+            letter-spacing: 0.05em;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        #search-bar {
+            padding: 15px;
+            border: 1px solid #34495e;
+            border-radius: 25px;
+            width: 400px;
+            font-size: 16px;
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        #file-type {
+            padding: 15px;
+            border: 1px solid #34495e;
+            border-radius: 25px;
+            font-size: 16px;
+            background-color: #34495e;
+            color: #ecf0f1;
+        }
+        .file-box {
+            display: inline-block;
+            width: 250px;
+            margin: 10px;
+            padding: 20px;
+            background-color: #34495e;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .file-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+        .file-link {
+            display: block;
+            margin-bottom: 10px;
+            text-decoration: none;
+            color: #1abc9c;
+            font-weight: bold;
+        }
+        .preview {
+            margin-bottom: 10px;
+        }
+        .download-button {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.2s;
+        }
+        .download-button:hover {
+            background-color: #c0392b;
+        }
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .footer {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #34495e;
+            border-radius: 10px;
+            color: #bdc3c7;
+            font-size: 14px;
+        }
+    </style>
+    <script>
+        async function fetchGitHubFiles() {
+            const repo = 'KeoLotso/Discord-Server-Link';
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const files = await response.json();
+
+                displayFiles(files);
+            } catch (error) {
+                console.error('Error fetching files:', error);
+            }
+        }
+
+        function displayFiles(files) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const filterType = document.getElementById('file-type').value;
+
+            files
+                .filter(file => file.name.toLowerCase().includes(searchTerm) && (filterType === 'all' || file.name.endsWith(filterType)))
+                .forEach(file => {
+                    const fileBox = document.createElement('div');
+                    fileBox.className = 'file-box';
+
+                    const link = document.createElement('a');
+                    link.href = file.html_url;
+                    link.textContent = file.name;
+                    link.className = 'file-link';
+
+                    const preview = document.createElement('div');
+                    preview.className = 'preview';
+                    if (file.name.match(/\.(png|jpg|jpeg|gif)$/)) {
+                        const img = document.createElement('img');
+                        img.src = file.download_url;
+                        img.alt = file.name;
+                        img.style.maxWidth = '100%';
+                        preview.appendChild(img);
+                    }
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = file.download_url;
+                    downloadLink.textContent = 'Download';
+                    downloadLink.className = 'download-button';
+                    downloadLink.download = file.name;
+
+                    fileBox.appendChild(link);
+                    fileBox.appendChild(preview);
+                    fileBox.appendChild(downloadLink);
+                    fileList.appendChild(fileBox);
+                });
+        }
+
+        function filterFiles() {
+            fetchGitHubFiles();
+        }
+
+        window.onload = fetchGitHubFiles;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Download Page</h1>
+        <div class="controls">
+            <input type="text" id="search-bar" placeholder="Search files" oninput="filterFiles()">
+            <select id="file-type" onchange="filterFiles()">
+                <option value="all">All</option>
+                <option value=".html">HTML</option>
+                <option value=".py">Python</option>
+                <option value=".gif">GIF</option>
+                <option value=".png">PNG</option>
+                <option value=".jpeg">JPEG</option>
+                <option value=".jpg">JPG</option>
+                <option value=".web">WEB</option>
+                <option value=".fbx">FBX</option>
+            </select>
+        </div>
+        <div id="file-list" class="file-list"></div>
+        <div class="footer">
+            <p>Data from the <a href="https://github.com/KeoLotso/Discord-Server-Link" style="color: #1abc9c; text-decoration: none;">GitHub Repository</a>.</p>
+            <p>All content is © 2024 Keo. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>
