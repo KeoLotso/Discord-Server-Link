@@ -33,7 +33,6 @@
             display: flex;
             justify-content: center;
             gap: 10px;
-            flex-wrap: wrap;
         }
         #search-bar {
             padding: 15px;
@@ -52,7 +51,7 @@
             background-color: #34495e;
             color: #ecf0f1;
         }
-        .file-box, .folder-box {
+        .file-box {
             display: inline-block;
             width: 250px;
             margin: 10px;
@@ -61,21 +60,17 @@
             border-radius: 10px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             transition: transform 0.2s, box-shadow 0.2s;
-            text-align: center;
-            vertical-align: top;
-            position: relative;
         }
-        .file-box:hover, .folder-box:hover {
+        .file-box:hover {
             transform: translateY(-10px);
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
         }
-        .file-link, .folder-link {
+        .file-link {
             display: block;
             margin-bottom: 10px;
             text-decoration: none;
             color: #1abc9c;
             font-weight: bold;
-            text-align: center;
         }
         .preview {
             margin-bottom: 10px;
@@ -88,12 +83,6 @@
             text-decoration: none;
             border-radius: 5px;
             transition: background-color 0.2s;
-            margin: 0 auto;
-            text-align: center;
-            position: absolute;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
         }
         .download-button:hover {
             background-color: #c0392b;
@@ -102,9 +91,6 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            overflow-y: auto;
-            max-height: 80vh;
-            padding: 10px;
         }
         .footer {
             margin-top: 20px;
@@ -115,6 +101,67 @@
             font-size: 14px;
         }
     </style>
+    <script>
+        async function fetchGitHubFiles() {
+            const repo = 'KeoLotso/Discord-Server-Link';
+            const apiUrl = `https://api.github.com/repos/${repo}/contents/`;
+
+            try {
+                const response = await fetch(apiUrl);
+                const files = await response.json();
+
+                displayFiles(files);
+            } catch (error) {
+                console.error('Error fetching files:', error);
+            }
+        }
+
+        function displayFiles(files) {
+            const fileList = document.getElementById('file-list');
+            fileList.innerHTML = '';
+            const searchTerm = document.getElementById('search-bar').value.toLowerCase();
+            const filterType = document.getElementById('file-type').value;
+
+            files
+                .filter(file => file.name.toLowerCase().includes(searchTerm) && (filterType === 'all' || file.name.endsWith(filterType)))
+                .forEach(file => {
+                    const fileBox = document.createElement('div');
+                    fileBox.className = 'file-box';
+
+                    const link = document.createElement('a');
+                    link.href = file.html_url;
+                    link.textContent = file.name;
+                    link.className = 'file-link';
+
+                    const preview = document.createElement('div');
+                    preview.className = 'preview';
+                    if (file.name.match(/\.(png|jpg|jpeg|gif)$/)) {
+                        const img = document.createElement('img');
+                        img.src = file.download_url;
+                        img.alt = file.name;
+                        img.style.maxWidth = '100%';
+                        preview.appendChild(img);
+                    }
+
+                    const downloadLink = document.createElement('a');
+                    downloadLink.href = file.download_url;
+                    downloadLink.textContent = 'Download';
+                    downloadLink.className = 'download-button';
+                    downloadLink.download = file.name;
+
+                    fileBox.appendChild(link);
+                    fileBox.appendChild(preview);
+                    fileBox.appendChild(downloadLink);
+                    fileList.appendChild(fileBox);
+                });
+        }
+
+        function filterFiles() {
+            fetchGitHubFiles();
+        }
+
+        window.onload = fetchGitHubFiles;
+    </script>
 </head>
 <body>
     <div class="container">
@@ -157,96 +204,5 @@
             <p>All content is © 2024 Keo. All rights reserved.</p>
         </div>
     </div>
-
-    <script>
-        const repo = 'KeoLotso/Discord-Server-Link';
-        let currentBranch = 'main';
-        const apiBase = `https://api.github.com/repos/${repo}`;
-
-        async function fetchGitHubBranches() {
-            const response = await fetch(`${apiBase}/branches`);
-            return response.json();
-        }
-
-        async function fetchGitHubFiles(branch = 'main') {
-            const apiUrl = `${apiBase}/contents/`;
-            const response = await fetch(apiUrl, {
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json'
-                }
-            });
-            return response.json();
-        }
-
-        async function fetchBranchFiles(branch) {
-            const apiUrl = `${apiBase}/contents/`;
-            const response = await fetch(apiUrl, {
-                headers: {
-                    'Accept': 'application/vnd.github.v3+json',
-                    'Authorization': `token YOUR_GITHUB_TOKEN`,
-                    'Branch': branch
-                }
-            });
-            return response.json();
-        }
-
-        function displayFiles(files, isRoot = true) {
-            const fileList = document.getElementById('file-list');
-            fileList.innerHTML = '';
-
-            files.forEach(file => {
-                const fileBox = document.createElement('div');
-
-                if (file.type === 'dir') {
-                    fileBox.className = 'folder-box';
-                    const folderLink = document.createElement('a');
-                    folderLink.href = '#';
-                    folderLink.textContent = file.name;
-                    folderLink.className = 'folder-link';
-                    folderLink.onclick = async () => {
-                        currentBranch = file.name;
-                        await loadFiles();
-                    };
-                    fileBox.appendChild(folderLink);
-                } else {
-                    fileBox.className = 'file-box';
-                    const link = document.createElement('a');
-                    link.href = file.html_url;
-                    link.textContent = file.name;
-                    link.className = 'file-link';
-
-                    const preview = document.createElement('div');
-                    preview.className = 'preview';
-                    if (file.name.match(/\.(png|jpg|jpeg|gif)$/)) {
-                        const img = document.createElement('img');
-                        img.src = file.download_url;
-                        img.alt = file.name;
-                        img.style.maxWidth = '100%';
-                        preview.appendChild(img);
-                    }
-
-                    const downloadLink = document.createElement('a');
-                    downloadLink.href = file.download_url;
-                    downloadLink.textContent = 'Download';
-                    downloadLink.className = 'download-button';
-                    downloadLink.download = file.name;
-
-                    fileBox.appendChild(link);
-                    fileBox.appendChild(preview);
-                    fileBox.appendChild(downloadLink);
-                }
-
-                fileList.appendChild(fileBox);
-            });
-        }
-
-        async function loadFiles() {
-            const branches = await fetchGitHubBranches();
-            const files = await (currentBranch === 'main' ? fetchGitHubFiles() : fetchBranchFiles(currentBranch));
-            displayFiles(files);
-        }
-
-        window.onload = loadFiles;
-    </script>
 </body>
 </html>
